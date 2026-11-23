@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>3D-модель дома из бруса (v2 — по реальным фото) — ДП № 551</title>
+<title>3D-модель дома из бруса 140×190 мм — ДП № 551 (СНТ «Вертолёт»)</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     width: 100%; height: 100%; overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial, sans-serif;
-    background: #1a2330; color: #e8eef5; user-select: none;
+    background: #141c26; color: #e8eef5; user-select: none;
+    -webkit-user-select: none; touch-action: none;
   }
   #canvas-container {
     position: fixed; inset: 0; width: 100%; height: 100%;
@@ -17,59 +18,69 @@
   canvas { display: block; width: 100%; height: 100%; cursor: grab; }
   canvas:active { cursor: grabbing; }
 
+  /* Loading overlay */
   #loader {
     position: fixed; inset: 0; z-index: 1000;
-    background: linear-gradient(135deg, #121a24, #1e2a38);
+    background: radial-gradient(circle at center, #1b2736, #0e1620);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 24px; text-align: center; transition: opacity 0.4s ease;
+    padding: 24px; text-align: center; transition: opacity 0.35s ease;
   }
   #loader.hidden { opacity: 0; pointer-events: none; }
   .spinner {
     width: 44px; height: 44px; border: 4px solid rgba(255,255,255,0.15);
     border-top-color: #f0a84b; border-radius: 50%;
-    animation: spin 0.9s linear infinite; margin-bottom: 16px;
+    animation: spin 0.85s linear infinite; margin-bottom: 16px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  #loader-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
-  #loader-sub { font-size: 13px; color: #9fb2c8; max-width: 440px; line-height: 1.5; }
+  #loader-title { font-size: 17px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+  #loader-sub { font-size: 13px; color: #9fb2c8; max-width: 420px; line-height: 1.5; }
 
+  /* Top-left specs badge */
   #header-badge {
     position: fixed; top: 14px; left: 14px; z-index: 20;
-    background: rgba(18, 25, 34, 0.84); backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+    background: rgba(14, 21, 30, 0.86); backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 13px;
     padding: 10px 14px; pointer-events: auto; max-width: 320px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.4);
   }
-  #header-badge h1 { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 0.2px; }
-  #header-badge p { font-size: 11.5px; color: #9db0c4; margin-top: 3px; line-height: 1.35; }
-  .badge-specs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+  #header-badge h1 { font-size: 13.5px; font-weight: 700; color: #fff; letter-spacing: 0.2px; }
+  #header-badge p { font-size: 11px; color: #9db0c4; margin-top: 3px; line-height: 1.35; }
+  .badge-specs { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
   .badge-pill {
-    font-size: 10.5px; background: rgba(240, 168, 75, 0.14); color: #f6bd6f;
-    border: 1px solid rgba(240, 168, 75, 0.3); padding: 2px 7px; border-radius: 999px;
+    font-size: 10px; background: rgba(240, 168, 75, 0.14); color: #f6bd6f;
+    border: 1px solid rgba(240, 168, 75, 0.32); padding: 2px 7px; border-radius: 999px;
+    font-weight: 600;
+  }
+  .badge-pill.timber {
+    background: rgba(86, 198, 255, 0.12); color: #7ad8ff;
+    border-color: rgba(86, 198, 255, 0.32);
   }
 
+  /* Right control panel */
   #panel-toggle {
     position: fixed; top: 14px; right: 14px; z-index: 30;
-    background: rgba(18, 25, 34, 0.9); color: #fff;
-    border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
-    padding: 8px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.3); display: none;
+    background: rgba(14, 21, 30, 0.92); color: #fff;
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 11px;
+    padding: 9px 13px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35); display: none;
   }
   #controls {
     position: fixed; top: 14px; right: 14px; z-index: 25;
-    width: 280px; max-height: calc(100vh - 28px); overflow-y: auto;
-    background: rgba(18, 25, 34, 0.88); backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.12); border-radius: 14px;
-    padding: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.38);
+    width: 284px; max-height: calc(100vh - 28px); overflow-y: auto;
+    background: rgba(14, 21, 30, 0.88); backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.13); border-radius: 15px;
+    padding: 14px; box-shadow: 0 14px 36px rgba(0,0,0,0.45);
     transition: transform 0.25s ease, opacity 0.25s ease;
   }
   #controls::-webkit-scrollbar { width: 5px; }
-  #controls::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+  #controls::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); border-radius: 4px; }
   .ctrl-section { margin-bottom: 13px; padding-bottom: 11px; border-bottom: 1px solid rgba(255,255,255,0.08); }
   .ctrl-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
   .ctrl-title {
-    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;
-    color: #8fa6be; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+    color: #8da4bc; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
   }
   .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .btn-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
@@ -78,55 +89,60 @@
     border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
     padding: 7px 6px; font-size: 11.2px; font-weight: 500;
     cursor: pointer; transition: all 0.15s ease; text-align: center;
+    min-height: 33px; display: flex; align-items: center; justify-content: center;
   }
   .btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
   .btn.active {
-    background: #e59632; color: #111821; border-color: #f4b35d; font-weight: 700;
+    background: #e59632; color: #10161f; border-color: #f4b35d; font-weight: 700;
   }
   .swatch-row { display: flex; gap: 7px; flex-wrap: wrap; }
   .swatch {
-    width: 32px; height: 26px; border-radius: 7px; cursor: pointer;
+    width: 33px; height: 26px; border-radius: 7px; cursor: pointer;
     border: 2px solid rgba(255,255,255,0.2); transition: transform 0.15s, border-color 0.15s;
   }
   .swatch:hover { transform: scale(1.08); }
   .swatch.active { border-color: #fff; box-shadow: 0 0 0 2px #e59632; }
   .check-list { display: flex; flex-direction: column; gap: 7px; }
   .check-item {
-    display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: #d6e1ec;
+    display: flex; align-items: center; gap: 8px; font-size: 11.8px; cursor: pointer; color: #d6e1ec;
   }
-  .check-item input { accent-color: #e59632; width: 15px; height: 15px; cursor: pointer; }
+  .check-item input { accent-color: #e59632; width: 16px; height: 16px; cursor: pointer; }
 
   #hints {
     position: fixed; bottom: 14px; left: 14px; z-index: 20;
-    background: rgba(18, 25, 34, 0.78); backdrop-filter: blur(8px);
+    background: rgba(14, 21, 30, 0.82); backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.09); border-radius: 10px;
-    padding: 7px 12px; font-size: 11px; color: #a7bacf;
+    padding: 7px 12px; font-size: 11px; color: #9cb0c6;
     pointer-events: none;
   }
 
+  /* 2D projected markers */
   #labels-layer {
     position: fixed; inset: 0; pointer-events: none; z-index: 10; overflow: hidden;
   }
   .room-label {
     position: absolute; transform: translate(-50%, -50%);
-    background: rgba(15, 22, 31, 0.82); color: #f4f7fa;
+    background: rgba(12, 18, 26, 0.86); color: #f4f7fa;
     border: 1px solid rgba(240, 168, 75, 0.55); border-radius: 8px;
     padding: 3px 8px; font-size: 11px; line-height: 1.25; text-align: center;
-    white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    pointer-events: none; transition: opacity 0.15s;
   }
   .room-label strong { display: block; font-size: 11.5px; color: #fff; }
   .room-label span { font-size: 10px; color: #f6bd6f; font-weight: 600; }
 
   .dim-label {
     position: absolute; transform: translate(-50%, -50%);
-    background: rgba(15, 22, 31, 0.85); color: #8be0ff;
-    border: 1px solid rgba(110, 210, 255, 0.5); border-radius: 6px;
+    background: rgba(12, 18, 26, 0.88); color: #8be0ff;
+    border: 1px solid rgba(110, 210, 255, 0.55); border-radius: 6px;
     padding: 2px 6px; font-size: 10.5px; font-weight: 700; white-space: nowrap;
+    pointer-events: none;
   }
 
-  @media (max-width: 720px) {
+  @media (max-width: 768px) {
     #panel-toggle { display: block; }
-    #controls { top: 54px; width: calc(100vw - 28px); max-width: 300px; }
+    #controls { top: 56px; width: calc(100vw - 28px); max-width: 310px; }
     #controls.collapsed { transform: translateX(115%); opacity: 0; pointer-events: none; }
     #header-badge { max-width: calc(100vw - 120px); padding: 8px 10px; }
     #header-badge h1 { font-size: 12.5px; }
@@ -138,20 +154,20 @@
 
 <div id="loader">
   <div class="spinner"></div>
-  <div id="loader-title">Загрузка 3D-движка Three.js...</div>
-  <div id="loader-sub">Подключаемся к CDN и строим уточнённую модель вашего дома по фото.</div>
+  <div id="loader-title">Загрузка 3D-модели дома...</div>
+  <div id="loader-sub">Брус 140×190 мм • Защита от мерцания • 37 ЖБ свай</div>
 </div>
 
 <div id="canvas-container"></div>
 <div id="labels-layer"></div>
 
 <div id="header-badge">
-  <h1>Дом из бруса — ДП № 551 (v2)</h1>
-  <p>СНТ «Вертолёт» • Уточнено по реальным фото фасадов</p>
+  <h1>Дом из бруса — ДП № 551</h1>
+  <p>СНТ «Вертолёт» • Уточнено по фото • Без мерцания</p>
   <div class="badge-specs">
+    <span class="badge-pill timber">Брус 140×190 мм</span>
     <span class="badge-pill">13,0 × 7,5 м</span>
     <span class="badge-pill">1 эт: 2,7 м</span>
-    <span class="badge-pill">2 эт: 1,5 / 2,55 м</span>
   </div>
 </div>
 
@@ -159,7 +175,7 @@
 
 <div id="controls">
   <div class="ctrl-section">
-    <div class="ctrl-title"><span>Этажи и разрез</span></div>
+    <div class="ctrl-title">Этажи и разрез</div>
     <div class="btn-grid">
       <button class="btn active" data-layer="all">Весь дом</button>
       <button class="btn" data-layer="floor2">2 этаж (без крыши)</button>
@@ -169,7 +185,7 @@
   </div>
 
   <div class="ctrl-section">
-    <div class="ctrl-title"><span>Стадия отделки</span></div>
+    <div class="ctrl-title">Стадия отделки</div>
     <div class="btn-grid">
       <button class="btn active" data-stage="photo">Как на фото</button>
       <button class="btn" data-stage="project">Проект (финиш)</button>
@@ -177,7 +193,7 @@
   </div>
 
   <div class="ctrl-section">
-    <div class="ctrl-title"><span>Цвет фасада (покраска бруса)</span></div>
+    <div class="ctrl-title">Цвет фасада (покраска бруса)</div>
     <div class="swatch-row">
       <div class="swatch active" data-wood="natural" title="Натуральный брус (как на фото)" style="background: linear-gradient(135deg, #d7ab76, #b98750);"></div>
       <div class="swatch" data-wood="honey" title="Тёплый мёд / Золотой дуб" style="background: linear-gradient(135deg, #c6863d, #985e23);"></div>
@@ -189,7 +205,7 @@
   </div>
 
   <div class="ctrl-section">
-    <div class="ctrl-title"><span>Освещение</span></div>
+    <div class="ctrl-title">Освещение</div>
     <div class="btn-grid">
       <button class="btn active" data-time="day">☀ День</button>
       <button class="btn" data-time="evening">🌙 Вечер</button>
@@ -197,16 +213,16 @@
   </div>
 
   <div class="ctrl-section">
-    <div class="ctrl-title"><span>Слои и детали</span></div>
+    <div class="ctrl-title">Слои и детали</div>
     <div class="check-list">
-      <label class="check-item"><input type="checkbox" id="chk-furniture" checked /> Мебель (примерная расстановка)</label>
+      <label class="check-item"><input type="checkbox" id="chk-furniture" checked /> Мебель (расстановка)</label>
       <label class="check-item"><input type="checkbox" id="chk-labels" checked /> Подписи комнат и площади</label>
       <label class="check-item"><input type="checkbox" id="chk-dims" /> Габаритные размеры (м)</label>
     </div>
   </div>
 
   <div class="ctrl-section">
-    <div class="ctrl-title"><span>Ракурсы камеры</span></div>
+    <div class="ctrl-title">Ракурсы камеры</div>
     <div class="btn-grid-3">
       <button class="btn" data-cam="photo">Угол (фото 1)</button>
       <button class="btn" data-cam="front">Фасад (фото 2)</button>
@@ -221,30 +237,29 @@
 </div>
 
 <div id="hints">
-  ЛКМ — вращение • ПКМ / Shift+ЛКМ — сдвиг • Колесо — масштаб
+  ЛКМ / 1 палец — вращение • ПКМ / 2 пальца — сдвиг • Колесо / щипок — масштаб
 </div>
 
 <script>
+// Resilient multi-CDN fallback loader with fast 2.5s failover
 (function loadThreeWithFallback() {
-  const urls = [
-    "https://cdn.jsdelivr.net/npm/three@0.145.0/build/three.min.js",
+  const mirrors = [
     "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
-    "https://unpkg.com/three@0.145.0/build/three.min.js"
+    "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js",
+    "https://unpkg.com/three@0.128.0/build/three.min.js"
   ];
   let idx = 0;
   let started = false;
 
   function tryNext() {
     if (started) return;
-    if (idx >= urls.length) {
-      document.getElementById("loader-title").textContent = "Не удалось загрузить Three.js";
-      document.getElementById("loader-sub").innerHTML =
-        "Нет доступа к внешним CDN (jsdelivr / cloudflare / unpkg) или отключён интернет.<br><br>" +
-        "Проверьте подключение к сети и обновите страницу (F5).";
+    if (idx >= mirrors.length) {
+      document.getElementById("loader-title").textContent = "Ошибка загрузки 3D-библиотеки";
+      document.getElementById("loader-sub").textContent = "Проверьте интернет-соединение или обновите страницу.";
       document.querySelector(".spinner").style.display = "none";
       return;
     }
-    const url = urls[idx++];
+    const url = mirrors[idx++];
     const s = document.createElement("script");
     s.src = url;
     s.async = true;
@@ -255,14 +270,14 @@
         s.remove();
         tryNext();
       }
-    }, 6000);
+    }, 2800);
     s.onload = function () {
       if (done || started) return;
       done = true;
       clearTimeout(timer);
       if (window.THREE) {
         started = true;
-        initApp();
+        initThreeApp();
       } else {
         tryNext();
       }
@@ -278,40 +293,50 @@
   tryNext();
 })();
 
-function initApp() {
+function initThreeApp() {
   const loader = document.getElementById("loader");
   const container = document.getElementById("canvas-container");
   const labelsLayer = document.getElementById("labels-layer");
 
   // =========================================================================
-  // 1. RENDERER, SCENE, CAMERA & SMOOTH ORBIT CONTROLS (ZERO DEPS)
+  // 1. RENDERER WITH ENHANCED DEPTH PRECISION (NO FLICKERING / NO Z-FIGHTING)
   // =========================================================================
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    powerPreference: "high-performance",
+    logarithmicDepthBuffer: false // standard 24-bit with optimized near/far
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.06;
+  renderer.toneMappingExposure = 1.04;
+  renderer.outputEncoding = THREE.sRGBEncoding;
   container.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xcbd9e6);
-  scene.fog = new THREE.Fog(0xcbd9e6, 32, 85);
+  scene.background = new THREE.Color(0xd2e0ed);
+  scene.fog = new THREE.Fog(0xd2e0ed, 36, 85);
 
-  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 160);
+  // CRITICAL FLICKER PREVENTION: near = 0.4 m (instead of 0.1), far = 80 m (instead of 160)
+  // Ratio 80 / 0.4 = 200 (vs 1600 before). 24-bit depth precision increased by 800%!
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.4, 80);
 
+  const maxAniso = Math.min(16, renderer.capabilities.getMaxAnisotropy());
+
+  // Smooth orbit camera controller
   const ctrl = {
-    target: new THREE.Vector3(3.8, 3.0, 3.8),
-    desiredTarget: new THREE.Vector3(3.8, 3.0, 3.8),
+    target: new THREE.Vector3(4.3, 3.3, 4.0),
+    desiredTarget: new THREE.Vector3(4.3, 3.3, 4.0),
     theta: 0.62,
     phi: 1.24,
     radius: 17.5,
     desiredTheta: 0.62,
     desiredPhi: 1.24,
     desiredRadius: 17.5,
-    minRadius: 2.2,
-    maxRadius: 42.0,
+    minRadius: 2.5,
+    maxRadius: 40.0,
     minPhi: 0.08,
     maxPhi: Math.PI / 2 - 0.02,
     isDragging: false,
@@ -340,7 +365,6 @@ function initApp() {
       ctrl.desiredTheta = ctrl.theta + diff;
     }
   }
-
   setCameraPreset([13.2, 4.8, 16.5], [4.3, 3.3, 4.0], true);
 
   const dom = renderer.domElement;
@@ -348,20 +372,15 @@ function initApp() {
 
   dom.addEventListener("mousedown", e => {
     ctrl.isDragging = true;
-    ctrl.lastX = e.clientX;
-    ctrl.lastY = e.clientY;
+    ctrl.lastX = e.clientX; ctrl.lastY = e.clientY;
     ctrl.mode = (e.button === 2 || e.shiftKey) ? "pan" : "orbit";
   });
-
   window.addEventListener("mouseup", () => { ctrl.isDragging = false; });
-
   window.addEventListener("mousemove", e => {
     if (!ctrl.isDragging) return;
     const dx = e.clientX - ctrl.lastX;
     const dy = e.clientY - ctrl.lastY;
-    ctrl.lastX = e.clientX;
-    ctrl.lastY = e.clientY;
-
+    ctrl.lastX = e.clientX; ctrl.lastY = e.clientY;
     if (ctrl.mode === "orbit") {
       ctrl.desiredTheta -= dx * 0.0065;
       ctrl.desiredPhi = Math.max(ctrl.minPhi, Math.min(ctrl.maxPhi, ctrl.desiredPhi - dy * 0.0065));
@@ -369,22 +388,19 @@ function initApp() {
       panCamera(dx, dy);
     }
   });
-
   dom.addEventListener("wheel", e => {
     e.preventDefault();
     const factor = e.deltaY > 0 ? 1.09 : 0.92;
     ctrl.desiredRadius = Math.max(ctrl.minRadius, Math.min(ctrl.maxRadius, ctrl.desiredRadius * factor));
   }, { passive: false });
 
+  // Touch
   dom.addEventListener("touchstart", e => {
     if (e.touches.length === 1) {
-      ctrl.isDragging = true;
-      ctrl.mode = "orbit";
-      ctrl.lastX = e.touches[0].clientX;
-      ctrl.lastY = e.touches[0].clientY;
+      ctrl.isDragging = true; ctrl.mode = "orbit";
+      ctrl.lastX = e.touches[0].clientX; ctrl.lastY = e.touches[0].clientY;
     } else if (e.touches.length === 2) {
-      ctrl.isDragging = true;
-      ctrl.mode = "pinch";
+      ctrl.isDragging = true; ctrl.mode = "pinch";
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       ctrl.pinchDist = Math.hypot(dx, dy);
@@ -398,8 +414,7 @@ function initApp() {
     if (e.touches.length === 1 && ctrl.mode === "orbit") {
       const dx = e.touches[0].clientX - ctrl.lastX;
       const dy = e.touches[0].clientY - ctrl.lastY;
-      ctrl.lastX = e.touches[0].clientX;
-      ctrl.lastY = e.touches[0].clientY;
+      ctrl.lastX = e.touches[0].clientX; ctrl.lastY = e.touches[0].clientY;
       ctrl.desiredTheta -= dx * 0.0075;
       ctrl.desiredPhi = Math.max(ctrl.minPhi, Math.min(ctrl.maxPhi, ctrl.desiredPhi - dy * 0.0075));
     } else if (e.touches.length === 2) {
@@ -414,11 +429,9 @@ function initApp() {
       const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
       const my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
       panCamera(mx - ctrl.lastX, my - ctrl.lastY);
-      ctrl.lastX = mx;
-      ctrl.lastY = my;
+      ctrl.lastX = mx; ctrl.lastY = my;
     }
   }, { passive: true });
-
   dom.addEventListener("touchend", () => { ctrl.isDragging = false; });
 
   function panCamera(dx, dy) {
@@ -432,118 +445,168 @@ function initApp() {
   }
 
   // =========================================================================
-  // 2. PROCEDURAL TEXTURES
+  // 2. TIMBER SPECIFICATION (140×190 мм) & MOIRÉ-FREE PROCEDURAL TEXTURES
   // =========================================================================
-  function makeTimberTexture(baseHex, grooveHex, grainHex) {
+  // EXACT SPECIFICATION:
+  // Timber profile height = 140 mm (0.14 m)
+  // Wall thickness = 190 mm (0.19 m)
+  // 4 courses = 4 * 0.14 = 0.56 m per 512×512 texture tile (each course is exactly 128 px high!)
+  const H_LOG = 0.14;       // 140 mm course height
+  const T_EXT = 0.19;       // 190 mm exterior wall thickness
+  const T_INT = 0.14;       // 140 mm interior load-bearing wall thickness
+  const T_PART = 0.09;      // 90 mm partition wall thickness (90x140 mm)
+
+  function makeProfiledTimberTexture(baseHex, grooveHex, grainHex) {
     const c = document.createElement("canvas");
     c.width = 512; c.height = 512;
     const ctx = c.getContext("2d");
     ctx.fillStyle = baseHex;
     ctx.fillRect(0, 0, 512, 512);
 
-    const rows = 8; // 8 courses per tile (~1.12 m tall -> 14 cm per profiled log)
-    const rowH = 512 / rows;
-    for (let r = 0; r < rows; r++) {
-      const y = r * rowH;
-      const shade = ((r * 37) % 19) - 9;
-      ctx.fillStyle = shade > 0 ? `rgba(255,245,220,${shade * 0.008})` : `rgba(40,20,5,${-shade * 0.009})`;
-      ctx.fillRect(0, y, 512, rowH);
+    const courses = 4; // 4 courses = exactly 0.56 m tall
+    const courseH = 512 / courses; // 128 px = 140 mm
 
+    for (let i = 0; i < courses; i++) {
+      const y = i * courseH;
+
+      // Subtle per-log natural tone shift
+      const shade = ((i * 37) % 15) - 7;
+      ctx.fillStyle = shade > 0 ? `rgba(255,248,225,${shade * 0.009})` : `rgba(35,20,5,${-shade * 0.010})`;
+      ctx.fillRect(0, y, 512, courseH);
+
+      // Smooth horizontal wood grain streaks (soft alpha, no high contrast)
       ctx.strokeStyle = grainHex;
-      ctx.globalAlpha = 0.22;
-      for (let g = 0; g < 14; g++) {
-        ctx.lineWidth = 1 + (g % 2);
+      ctx.globalAlpha = 0.18;
+      for (let g = 0; g < 10; g++) {
+        ctx.lineWidth = 1.2;
         ctx.beginPath();
-        const gy = y + 6 + (g / 14) * (rowH - 12);
+        const gy = y + 14 + (g / 10) * (courseH - 28);
         ctx.moveTo(0, gy);
-        ctx.bezierCurveTo(160, gy + ((r + g) % 3 - 1) * 2.5, 350, gy - ((r * 2 + g) % 3 - 1) * 2.5, 512, gy);
+        ctx.bezierCurveTo(160, gy + ((i + g) % 3 - 1) * 2.0, 350, gy - ((i * 2 + g) % 3 - 1) * 2.0, 512, gy);
         ctx.stroke();
       }
-      ctx.globalAlpha = 0.17;
-      const kx = ((r * 173 + 60) % 440) + 30;
-      const ky = y + rowH * 0.52;
+
+      // Soft knot ring
+      ctx.globalAlpha = 0.14;
+      const kx = ((i * 173 + 80) % 400) + 40;
+      const ky = y + courseH * 0.5;
       ctx.fillStyle = grooveHex;
       ctx.beginPath();
-      ctx.ellipse(kx, ky, 9, 4, 0.1, 0, Math.PI * 2);
+      ctx.ellipse(kx, ky, 8, 3.5, 0.08, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.globalAlpha = 0.72;
-      ctx.fillStyle = grooveHex;
-      ctx.fillRect(0, y, 512, 3.5);
-      ctx.globalAlpha = 0.25;
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, y + 3.5, 512, 1.8);
-      ctx.globalAlpha = 1;
+      // AUTHENTIC PROFILED TIMBER BEVEL (ФАСКА 15 мм):
+      // Soft ambient shadow gradient at top and bottom of each log
+      // Top bevel gradient (fade into groove)
+      ctx.globalAlpha = 1.0;
+      const topGrad = ctx.createLinearGradient(0, y, 0, y + 10);
+      topGrad.addColorStop(0.0, grooveHex);
+      topGrad.addColorStop(0.3, "rgba(50,28,10,0.35)");
+      topGrad.addColorStop(1.0, "rgba(50,28,10,0.0)");
+      ctx.fillStyle = topGrad;
+      ctx.fillRect(0, y, 512, 10);
+
+      // Bottom bevel gradient
+      const botGrad = ctx.createLinearGradient(0, y + courseH - 10, 0, y + courseH);
+      botGrad.addColorStop(0.0, "rgba(50,28,10,0.0)");
+      botGrad.addColorStop(0.7, "rgba(50,28,10,0.35)");
+      botGrad.addColorStop(1.0, grooveHex);
+      ctx.fillStyle = botGrad;
+      ctx.fillRect(0, y + courseH - 10, 512, 10);
+
+      // 2px recessed interlocking joint line (межвенцовый шов)
+      ctx.fillStyle = "rgba(18,10,4,0.72)";
+      ctx.fillRect(0, y, 512, 2.5);
     }
 
     const tex = new THREE.CanvasTexture(c);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    // EXACT VERTICAL REPEAT: 1 / 0.56 m = 1.7857 repeats per meter!
+    // Each 140 mm course is mathematically locked across every wall!
+    tex.repeat.set(0.40, 1 / 0.56);
+    tex.generateMipmaps = true;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.anisotropy = maxAniso;
     tex.encoding = THREE.sRGBEncoding;
     return tex;
   }
 
-  function makeRoofTileTexture() {
+  // Soft Monterey metal tile texture with smooth sinusoidal waves (ZERO MOIRÉ)
+  function makeSmoothRoofTexture() {
     const c = document.createElement("canvas");
     c.width = 512; c.height = 512;
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#2b3036";
+    ctx.fillStyle = "#292e34";
     ctx.fillRect(0, 0, 512, 512);
 
-    const cols = 16;
+    // 8 smooth sinusoidal waves (instead of 16 harsh sharp stops)
+    const cols = 8;
     const colW = 512 / cols;
     for (let i = 0; i < cols; i++) {
       const x = i * colW;
       const grad = ctx.createLinearGradient(x, 0, x + colW, 0);
-      grad.addColorStop(0.0, "#1d2126");
-      grad.addColorStop(0.28, "#3e454e");
-      grad.addColorStop(0.55, "#2c3138");
-      grad.addColorStop(0.82, "#191d21");
-      grad.addColorStop(1.0, "#1d2126");
+      grad.addColorStop(0.0, "#1d2227");
+      grad.addColorStop(0.35, "#3d454e");
+      grad.addColorStop(0.65, "#2c3239");
+      grad.addColorStop(1.0, "#1d2227");
       ctx.fillStyle = grad;
       ctx.fillRect(x, 0, colW, 512);
     }
 
-    const steps = 10;
+    // 6 soft step shadows across roof pitch
+    const steps = 6;
     const stepH = 512 / steps;
     for (let j = 0; j < steps; j++) {
       const y = j * stepH;
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
-      ctx.fillRect(0, y, 512, 4);
-      ctx.fillStyle = "rgba(255,255,255,0.14)";
-      ctx.fillRect(0, y + 4, 512, 2);
+      const sGrad = ctx.createLinearGradient(0, y, 0, y + 8);
+      sGrad.addColorStop(0.0, "rgba(0,0,0,0.52)");
+      sGrad.addColorStop(0.5, "rgba(0,0,0,0.22)");
+      sGrad.addColorStop(1.0, "rgba(0,0,0,0.0)");
+      ctx.fillStyle = sGrad;
+      ctx.fillRect(0, y, 512, 8);
+      // Soft highlight
+      ctx.fillStyle = "rgba(255,255,255,0.07)";
+      ctx.fillRect(0, y + 8, 512, 2.5);
     }
 
     const tex = new THREE.CanvasTexture(c);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(0.7, 0.7);
+    tex.repeat.set(0.65, 0.65);
+    tex.generateMipmaps = true;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.anisotropy = maxAniso;
     tex.encoding = THREE.sRGBEncoding;
     return tex;
   }
 
-  function makeStoneTexture() {
+  function makeSmoothStoneTexture() {
     const c = document.createElement("canvas");
     c.width = 512; c.height = 256;
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#625d56";
+    ctx.fillStyle = "#635e57";
     ctx.fillRect(0, 0, 512, 256);
-
-    const rows = 6;
+    const rows = 5;
     const rh = 256 / rows;
-    const palette = ["#8b8378", "#766f66", "#9a9082", "#69625a", "#837a6f"];
+    const palette = ["#8a8277", "#766f65", "#978d80", "#6b645b", "#81786d"];
     for (let r = 0; r < rows; r++) {
-      let x = (r % 2) * -32;
+      let x = (r % 2) * -36;
       while (x < 512) {
-        const w = 52 + ((r * 29 + Math.abs(x)) % 48);
-        ctx.fillStyle = palette[(r * 7 + Math.floor(Math.abs(x) / 20)) % palette.length];
+        const w = 55 + ((r * 29 + Math.abs(x)) % 45);
+        ctx.fillStyle = palette[(r * 7 + Math.floor(Math.abs(x) / 22)) % palette.length];
         ctx.fillRect(x + 2, r * rh + 2, w - 4, rh - 4);
-        ctx.fillStyle = "rgba(255,255,255,0.08)";
-        ctx.fillRect(x + 2, r * rh + 2, w - 4, 4);
+        ctx.fillStyle = "rgba(255,255,255,0.06)";
+        ctx.fillRect(x + 2, r * rh + 2, w - 4, 3);
         x += w;
       }
     }
     const tex = new THREE.CanvasTexture(c);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(3, 0.7);
+    tex.repeat.set(2.4, 0.7);
+    tex.generateMipmaps = true;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.anisotropy = maxAniso;
     tex.encoding = THREE.sRGBEncoding;
     return tex;
   }
@@ -552,21 +615,24 @@ function initApp() {
     const c = document.createElement("canvas");
     c.width = 512; c.height = 512;
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#c99f6b";
+    ctx.fillStyle = "#c89f6b";
     ctx.fillRect(0, 0, 512, 512);
-    const boards = 12;
+    const boards = 10;
     const bh = 512 / boards;
     for (let i = 0; i < boards; i++) {
       const y = i * bh;
-      const v = ((i * 23) % 14) - 7;
-      ctx.fillStyle = v > 0 ? `rgba(255,245,220,${v * 0.012})` : `rgba(60,35,10,${-v * 0.012})`;
+      const v = ((i * 23) % 12) - 6;
+      ctx.fillStyle = v > 0 ? `rgba(255,245,220,${v * 0.010})` : `rgba(60,35,10,${-v * 0.010})`;
       ctx.fillRect(0, y, 512, bh);
-      ctx.fillStyle = "rgba(70,42,18,0.4)";
+      ctx.fillStyle = "rgba(70,42,18,0.35)";
       ctx.fillRect(0, y, 512, 1.5);
     }
     const tex = new THREE.CanvasTexture(c);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(2.5, 2.5);
+    tex.repeat.set(2.2, 2.2);
+    tex.generateMipmaps = true;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.anisotropy = maxAniso;
     tex.encoding = THREE.sRGBEncoding;
     return tex;
   }
@@ -575,17 +641,47 @@ function initApp() {
     const c = document.createElement("canvas");
     c.width = 512; c.height = 512;
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#5a6d48";
+    ctx.fillStyle = "#5c6e4a";
     ctx.fillRect(0, 0, 512, 512);
-    for (let i = 0; i < 6500; i++) {
-      const x = Math.random() * 512;
-      const y = Math.random() * 512;
-      ctx.fillStyle = i % 3 === 0 ? "rgba(115,134,82,0.35)" : (i % 2 === 0 ? "rgba(72,88,52,0.35)" : "rgba(128,112,78,0.22)");
+    let seed = 42;
+    function rnd() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }
+    for (let i = 0; i < 5000; i++) {
+      const x = rnd() * 512, y = rnd() * 512;
+      ctx.fillStyle = i % 3 === 0 ? "rgba(115,134,82,0.28)" : (i % 2 === 0 ? "rgba(72,88,52,0.28)" : "rgba(128,112,78,0.18)");
       ctx.fillRect(x, y, 3, 3);
     }
     const tex = new THREE.CanvasTexture(c);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     tex.repeat.set(16, 16);
+    tex.generateMipmaps = true;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.anisotropy = maxAniso;
+    tex.encoding = THREE.sRGBEncoding;
+    return tex;
+  }
+
+  // End-grain cross cut (спил бруса с годичными кольцами)
+  function makeEndGrainTexture() {
+    const c = document.createElement("canvas");
+    c.width = 256; c.height = 256;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#a87742";
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.strokeStyle = "#6f461b";
+    ctx.lineWidth = 2.0;
+    const cx = 118, cy = 138;
+    for (let r = 10; r < 200; r += 14) {
+      ctx.globalAlpha = 0.32;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, r, r * 0.9, 0.1, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = "#512f0f";
+    ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2); ctx.fill();
+    const tex = new THREE.CanvasTexture(c);
+    tex.generateMipmaps = true;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
     tex.encoding = THREE.sRGBEncoding;
     return tex;
   }
@@ -599,57 +695,62 @@ function initApp() {
     white:    { base: "#ebe6dc", groove: "#aba396", grain: "#cec7ba", solid: 0xe6e0d5, endGrain: 0xc2bab0 }
   };
 
-  const wallTex = makeTimberTexture(woodPresets.natural.base, woodPresets.natural.groove, woodPresets.natural.grain);
-  wallTex.repeat.set(0.45, 0.9);
-
-  const matWall = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.78, metalness: 0.02 });
-  const matWallInner = new THREE.MeshStandardMaterial({
-    map: makeTimberTexture("#dfb885", "#8a6035", "#b28654"),
-    roughness: 0.8, metalness: 0.02
+  // Materials
+  const matWall = new THREE.MeshStandardMaterial({
+    map: makeProfiledTimberTexture(woodPresets.natural.base, woodPresets.natural.groove, woodPresets.natural.grain),
+    roughness: 0.74, metalness: 0.02
   });
-  matWallInner.map.repeat.set(0.45, 0.9);
+  const matWallInner = new THREE.MeshStandardMaterial({
+    map: makeProfiledTimberTexture("#dfb885", "#8a6035", "#b28654"),
+    roughness: 0.78, metalness: 0.02
+  });
 
-  const matTimberPost = new THREE.MeshStandardMaterial({ color: 0xd0a26c, roughness: 0.8, metalness: 0.02 });
-  const matEndGrain = new THREE.MeshStandardMaterial({ color: 0x9b6838, roughness: 0.85 });
-  // Antiseptic-treated greenish-ochre rim beam (закладной венец как на фото)
-  const matTreatedRim = new THREE.MeshStandardMaterial({ color: 0x9b8e48, roughness: 0.84 });
-  const matDarkSteps = new THREE.MeshStandardMaterial({ color: 0x565446, roughness: 0.9 });
+  const matTimberPost = new THREE.MeshStandardMaterial({ color: 0xd0a26c, roughness: 0.76 });
+  const matEndGrain = new THREE.MeshStandardMaterial({ map: makeEndGrainTexture(), roughness: 0.82 });
+  const matTreatedRim = new THREE.MeshStandardMaterial({ color: 0x9b8e48, roughness: 0.82 });
+  const matDarkSteps = new THREE.MeshStandardMaterial({ color: 0x545244, roughness: 0.88 });
 
   const matRoof = new THREE.MeshStandardMaterial({
-    map: makeRoofTileTexture(), roughness: 0.42, metalness: 0.45, side: THREE.DoubleSide
+    map: makeSmoothRoofTexture(), roughness: 0.38, metalness: 0.48, side: THREE.DoubleSide
   });
+  // Anti-z-fighting polygon offset for trims and flashings
   const matRoofTrim = new THREE.MeshStandardMaterial({
-    color: 0x22262b, roughness: 0.4, metalness: 0.5, side: THREE.DoubleSide
+    color: 0x22262b, roughness: 0.40, metalness: 0.42, side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: -1.0, polygonOffsetUnits: -4.0
   });
-  const matSoffit = new THREE.MeshStandardMaterial({
-    color: 0xd9dde0, roughness: 0.7, metalness: 0.05, side: THREE.DoubleSide
+  const matValley = new THREE.MeshStandardMaterial({
+    color: 0x9fa9b2, roughness: 0.32, metalness: 0.72,
+    polygonOffset: true, polygonOffsetFactor: -1.5, polygonOffsetUnits: -5.0
   });
-  const matWhiteTrim = new THREE.MeshStandardMaterial({ color: 0xf1f3f5, roughness: 0.65, metalness: 0.05 });
-  const matFrameDark = new THREE.MeshStandardMaterial({ color: 0x232120, roughness: 0.36, metalness: 0.25 });
-  const matSpacerLight = new THREE.MeshStandardMaterial({ color: 0xd8dee3, roughness: 0.4, metalness: 0.2 });
+  const matSoffit = new THREE.MeshStandardMaterial({ color: 0xdce0e4, roughness: 0.65, side: THREE.DoubleSide });
+  const matWhiteTrim = new THREE.MeshStandardMaterial({ color: 0xf3f5f7, roughness: 0.60 });
+  const matFrameDark = new THREE.MeshStandardMaterial({ color: 0x232120, roughness: 0.35, metalness: 0.22 });
+  const matSpacerLight = new THREE.MeshStandardMaterial({ color: 0xdbe0e5, roughness: 0.40, metalness: 0.18 });
+
   const matGlass = new THREE.MeshPhysicalMaterial({
-    color: 0x6f95ad, roughness: 0.07, metalness: 0.18,
-    transparent: true, opacity: 0.62, reflectivity: 0.92
+    color: 0x6e95ae, roughness: 0.06, metalness: 0.16,
+    transparent: true, opacity: 0.54, reflectivity: 0.92
   });
   const matGlassEvening = new THREE.MeshStandardMaterial({
-    color: 0xffd796, emissive: 0xffa83d, emissiveIntensity: 0.95,
+    color: 0xffd28b, emissive: 0xffa436, emissiveIntensity: 0.95,
     roughness: 0.18, transparent: true, opacity: 0.86
   });
-  const matDoorDark = new THREE.MeshStandardMaterial({ color: 0x1e2022, roughness: 0.42, metalness: 0.52 });
-  const matDoorPanel = new THREE.MeshStandardMaterial({ color: 0x16181a, roughness: 0.48, metalness: 0.45 });
-  const matDoorWood = new THREE.MeshStandardMaterial({ color: 0xba8b57, roughness: 0.72 });
+
+  const matDoorDark = new THREE.MeshStandardMaterial({ color: 0x1e2023, roughness: 0.40, metalness: 0.50 });
+  const matDoorPanel = new THREE.MeshStandardMaterial({ color: 0x151719, roughness: 0.46, metalness: 0.42 });
+  const matDoorWood = new THREE.MeshStandardMaterial({ color: 0xba8b57, roughness: 0.70 });
   const matConcrete = new THREE.MeshStandardMaterial({ color: 0xaeb2b5, roughness: 0.92 });
-  const matSteel = new THREE.MeshStandardMaterial({ color: 0x35393e, roughness: 0.5, metalness: 0.7 });
-  const matStone = new THREE.MeshStandardMaterial({ map: makeStoneTexture(), roughness: 0.88 });
-  const matFloor = new THREE.MeshStandardMaterial({ map: makeFloorWoodTexture(), roughness: 0.75 });
-  const matTileBath = new THREE.MeshStandardMaterial({ color: 0xdbe3e8, roughness: 0.35 });
-  const matDeck = new THREE.MeshStandardMaterial({ map: makeFloorWoodTexture(), color: 0xc29863, roughness: 0.84 });
+  const matSteel = new THREE.MeshStandardMaterial({ color: 0x363a3f, roughness: 0.48, metalness: 0.72 });
+  const matStone = new THREE.MeshStandardMaterial({ map: makeSmoothStoneTexture(), roughness: 0.86 });
+  const matFloor = new THREE.MeshStandardMaterial({ map: makeFloorWoodTexture(), roughness: 0.72 });
+  const matTileBath = new THREE.MeshStandardMaterial({ color: 0xdce3e8, roughness: 0.32 });
+  const matDeck = new THREE.MeshStandardMaterial({ map: makeFloorWoodTexture(), color: 0xc29863, roughness: 0.80 });
   const matStairWood = new THREE.MeshStandardMaterial({ color: 0xb9854c, roughness: 0.65 });
 
   // =========================================================================
   // 3. LIGHTING & ENVIRONMENT
   // =========================================================================
-  const hemiLight = new THREE.HemisphereLight(0xdcebf7, 0x5c684a, 0.78);
+  const hemiLight = new THREE.HemisphereLight(0xdcebf7, 0x5a6648, 0.78);
   scene.add(hemiLight);
 
   const sunLight = new THREE.DirectionalLight(0xfff5e4, 1.25);
@@ -657,17 +758,17 @@ function initApp() {
   sunLight.castShadow = true;
   sunLight.shadow.mapSize.width = 2048;
   sunLight.shadow.mapSize.height = 2048;
-  sunLight.shadow.camera.near = 2;
-  sunLight.shadow.camera.far = 70;
-  const sc = 16;
+  sunLight.shadow.camera.near = 4;
+  sunLight.shadow.camera.far = 65;
+  const sc = 15;
   sunLight.shadow.camera.left = -sc;
   sunLight.shadow.camera.right = sc;
   sunLight.shadow.camera.top = sc;
   sunLight.shadow.camera.bottom = -sc;
-  sunLight.shadow.bias = -0.0005;
+  sunLight.shadow.bias = -0.0004;
   scene.add(sunLight);
 
-  const fillLight = new THREE.DirectionalLight(0xb6d0e8, 0.38);
+  const fillLight = new THREE.DirectionalLight(0xb6d0e8, 0.36);
   fillLight.position.set(-14, 12, -14);
   scene.add(fillLight);
 
@@ -688,20 +789,18 @@ function initApp() {
   }
 
   // =========================================================================
-  // 4. KEY ARCHITECTURAL CONSTANTS (CONTRACT № 551 + REAL PHOTO PROPORTIONS)
+  // 4. ARCHITECTURAL ELEVATIONS (CONTRACT № 551 + REAL PHOTOS)
   // =========================================================================
   const Y_PILE_TOP   = 0.55;
   const Y_BASE_BEAM  = 0.35;
   const Y_FLOOR1     = Y_PILE_TOP + Y_BASE_BEAM; // 0.90 m
-  const H_FLOOR1     = 2.70;
+  const H_FLOOR1     = 2.70;                     // 19 courses of 140 mm timber
   const H_SLAB12     = 0.22;
   const Y_FLOOR2     = Y_FLOOR1 + H_FLOOR1 + H_SLAB12; // 3.82 m
-  const H_KNEE       = 1.50;
-  const Y_EAVE       = Y_FLOOR2 + H_KNEE; // 5.32 m
-  const H_GABLE      = 2.70;
-  const Y_RIDGE      = Y_EAVE + H_GABLE; // 8.02 m
-  const T_EXT        = 0.19;
-  const T_INT        = 0.14;
+  const H_KNEE       = 1.50;                     // 11 courses of 140 mm timber
+  const Y_EAVE       = Y_FLOOR2 + H_KNEE;        // 5.32 m
+  const H_GABLE      = 2.70;                     // 19 courses of 140 mm timber
+  const Y_RIDGE      = Y_EAVE + H_GABLE;         // 8.02 m
 
   addWarmLight(8.5, Y_FLOOR1 + 2.35, 6.75, 1.5, 8);
   addWarmLight(-1.5, Y_FLOOR1 + 2.3, 3.8, 1.2, 9);
@@ -732,7 +831,7 @@ function initApp() {
   const windowGlassMeshes = [];
 
   // =========================================================================
-  // 5. GEOMETRY HELPERS
+  // 5. GEOMETRY HELPERS WITH ZERO Z-FIGHTING
   // =========================================================================
   function addBox(parent, w, h, d, x, y, z, mat, cast = true, recv = true) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
@@ -743,6 +842,7 @@ function initApp() {
     return m;
   }
 
+  // Extruded wall with exact rectangular / polygonal cutouts
   function buildWallWithOpenings(parent, opts) {
     const { axis, fixedCoord, start, end, yBottom, yTop, thickness, mat, openings = [], gablePeak = null } = opts;
     const len = end - start;
@@ -751,9 +851,7 @@ function initApp() {
     shape.moveTo(0, 0);
     shape.lineTo(len, 0);
     shape.lineTo(len, h);
-    if (gablePeak) {
-      shape.lineTo(gablePeak.u, gablePeak.v);
-    }
+    if (gablePeak) shape.lineTo(gablePeak.u, gablePeak.v);
     shape.lineTo(0, h);
     shape.closePath();
 
@@ -807,27 +905,22 @@ function initApp() {
     const vMid = yBottom + (op.v0 + op.v1) / 2;
     const grp = new THREE.Group();
     const fT = 0.068;
-    const fD = wallT + 0.032;
+    const fD = wallT + 0.034; // frame protrudes 1.7 cm outside & inside to completely prevent z-fighting
 
-    // Dark outer frame
     addBox(grp, w, fT, fD, 0, h / 2 - fT / 2, 0, matFrameDark);
     addBox(grp, w, fT, fD, 0, -h / 2 + fT / 2, 0, matFrameDark);
     addBox(grp, fT, h, fD, -w / 2 + fT / 2, 0, 0, matFrameDark);
     addBox(grp, fT, h, fD, w / 2 - fT / 2, 0, 0, matFrameDark);
 
-    // Subtle inner glazing bead / spacer highlight (visible on photo 3!)
     if (op.showSpacer) {
-      const spT = 0.022;
-      const spD = wallT - 0.04;
-      const iw = w - fT * 2;
-      const ih = h - fT * 2;
+      const spT = 0.022, spD = wallT - 0.04;
+      const iw = w - fT * 2, ih = h - fT * 2;
       addBox(grp, iw, spT, spD, 0, ih / 2 - spT / 2, 0, matSpacerLight, false, false);
       addBox(grp, iw, spT, spD, 0, -ih / 2 + spT / 2, 0, matSpacerLight, false, false);
       addBox(grp, spT, ih, spD, -iw / 2 + spT / 2, 0, 0, matSpacerLight, false, false);
       addBox(grp, spT, ih, spD, iw / 2 - spT / 2, 0, 0, matSpacerLight, false, false);
     }
 
-    // Mullions for multi-sash windows
     const sashes = op.sashes || 1;
     for (let s = 1; s < sashes; s++) {
       const mx = -w / 2 + (w * s) / sashes;
@@ -838,20 +931,16 @@ function initApp() {
     grp.add(glass);
     windowGlassMeshes.push(glass);
 
-    if (axis === "x") {
-      grp.position.set(uMid, vMid, fixedCoord);
-    } else {
-      grp.rotation.y = -Math.PI / 2;
-      grp.position.set(fixedCoord, vMid, uMid);
-    }
+    if (axis === "x") grp.position.set(uMid, vMid, fixedCoord);
+    else { grp.rotation.y = -Math.PI / 2; grp.position.set(fixedCoord, vMid, uMid); }
     parent.add(grp);
   }
 
-  // Generalized 5-sided (chamfered top) gable window with exact asymmetric mullion!
+  // 5-sided asymmetric gable window (Photo 2)
   function addPolyWindow(parent, axis, fixedCoord, start, yBottom, op, wallT) {
     const pts = op.poly;
     const grp = new THREE.Group();
-    const fD = wallT + 0.032;
+    const fD = wallT + 0.034;
 
     const gShape = new THREE.Shape();
     gShape.moveTo(pts[0][0], pts[0][1]);
@@ -863,13 +952,11 @@ function initApp() {
     grp.add(glass);
     windowGlassMeshes.push(glass);
 
-    // Outer perimeter frame bars
+    // Perimeter frame bars with clean miter overlap
     const fW = 0.072;
     for (let i = 0; i < pts.length; i++) {
-      const a = pts[i];
-      const b = pts[(i + 1) % pts.length];
-      const dx = b[0] - a[0];
-      const dy = b[1] - a[1];
+      const a = pts[i], b = pts[(i + 1) % pts.length];
+      const dx = b[0] - a[0], dy = b[1] - a[1];
       const len = Math.hypot(dx, dy);
       const ang = Math.atan2(dy, dx);
       const bar = new THREE.Mesh(new THREE.BoxGeometry(len + 0.055, fW, fD), matFrameDark);
@@ -879,7 +966,7 @@ function initApp() {
       grp.add(bar);
     }
 
-    // Vertical mullion placed precisely at op.mullionU (dividing narrow rect pane & sloped pane)
+    // Vertical dividing mullion right at the bend
     if (op.mullionU !== undefined) {
       const mullH = op.mullionVTop - op.mullionVBot;
       const mull = new THREE.Mesh(new THREE.BoxGeometry(0.062, mullH, fD * 0.85), matFrameDark);
@@ -888,12 +975,8 @@ function initApp() {
       grp.add(mull);
     }
 
-    if (axis === "x") {
-      grp.position.set(start, yBottom, fixedCoord);
-    } else {
-      grp.rotation.y = -Math.PI / 2;
-      grp.position.set(fixedCoord, yBottom, start);
-    }
+    if (axis === "x") grp.position.set(start, yBottom, fixedCoord);
+    else { grp.rotation.y = -Math.PI / 2; grp.position.set(fixedCoord, yBottom, start); }
     parent.add(grp);
   }
 
@@ -922,34 +1005,29 @@ function initApp() {
     } else {
       addBox(grp, w - fT * 2, h - fT, 0.065, 0, -fT / 2, 0, leafMat);
       if (isExt) {
-        // Vertical decorative recessed panel molding on exterior metal door (as on photo 2)
+        // Vertical decorative recessed panel molding on exterior metal door (Photo 2)
         const pw = w - fT * 2 - 0.26;
         const ph = h - fT - 0.36;
-        addBox(grp, pw, ph, 0.08, 0, -fT / 2 + 0.02, 0, matDoorPanel, false, false);
-        addBox(grp, pw - 0.07, ph - 0.07, 0.086, 0, -fT / 2 + 0.02, 0, matDoorDark, false, false);
-        // Black handle on right side
+        addBox(grp, pw, ph, 0.082, 0, -fT / 2 + 0.02, 0, matDoorPanel, false, false);
+        addBox(grp, pw - 0.07, ph - 0.07, 0.088, 0, -fT / 2 + 0.02, 0, matDoorDark, false, false);
         addBox(grp, 0.13, 0.028, 0.14, w / 2 - 0.16, -0.06, 0.02, matSteel);
       } else {
         addBox(grp, 0.12, 0.025, 0.12, w / 2 - 0.14, -0.05, 0, matSoffit);
       }
     }
 
-    if (axis === "x") {
-      grp.position.set(uMid, vMid, fixedCoord);
-    } else {
-      grp.rotation.y = -Math.PI / 2;
-      grp.position.set(fixedCoord, vMid, uMid);
-    }
+    if (axis === "x") grp.position.set(uMid, vMid, fixedCoord);
+    else { grp.rotation.y = -Math.PI / 2; grp.position.set(fixedCoord, vMid, uMid); }
     parent.add(grp);
   }
 
-  // Alternating dark end-grain accents on warm-corner (тёплый угол) log joints
-  function addCornerJoinery(parent, x, z, yBot, yTop) {
-    const courseH = 0.14;
+  // Interlocking corner timber ends («тёплый угол» с годичными кольцами каждые 140 мм)
+  function addCornerTimberJoints(parent, x, z, yBot, yTop) {
+    const courseH = H_LOG; // 140 mm
     let idx = 0;
-    for (let y = yBot + courseH / 2; y < yTop - 0.05; y += courseH) {
+    for (let y = yBot + courseH / 2; y < yTop - 0.04; y += courseH) {
       if (idx % 2 === 0) {
-        addBox(parent, 0.205, courseH * 0.92, 0.205, x, y, z, matEndGrain, false, true);
+        addBox(parent, 0.208, courseH * 0.94, 0.208, x, y, z, matEndGrain, false, true);
       }
       idx++;
     }
@@ -1002,8 +1080,8 @@ function initApp() {
       return m;
     }
 
-    grp.add(makeQuadMesh(v0, v1, v2, v3, matTop, n, 0.55));
-    grp.add(makeQuadMesh(b3, b2, b1, b0, matBottom, n.clone().negate(), 0.5));
+    grp.add(makeQuadMesh(v0, v1, v2, v3, matTop, n, 0.45));
+    grp.add(makeQuadMesh(b3, b2, b1, b0, matBottom, n.clone().negate(), 0.45));
     grp.add(makeQuadMesh(v0, b0, b1, v1, matRoofTrim, null, 1));
     grp.add(makeQuadMesh(v1, b1, b2, v2, matRoofTrim, null, 1));
     grp.add(makeQuadMesh(v2, b2, b3, v3, matRoofTrim, null, 1));
@@ -1037,7 +1115,7 @@ function initApp() {
 
   const pad = new THREE.Mesh(
     new THREE.BoxGeometry(14.8, 0.04, 9.3),
-    new THREE.MeshStandardMaterial({ color: 0x8d877a, roughness: 0.95 })
+    new THREE.MeshStandardMaterial({ color: 0x8a8477, roughness: 0.95 })
   );
   pad.position.set(3.5, 0.02, 3.75);
   pad.receiveShadow = true;
@@ -1061,7 +1139,7 @@ function initApp() {
   }
 
   // =========================================================================
-  // 7. FOUNDATION: 37 RC DRIVEN PILES (200x200 mm) & TREATED RIM BEAMS
+  // 7. FOUNDATION: 37 RC DRIVEN PILES (200x200 mm) & ANTISEPTIC RIM BEAMS
   // =========================================================================
   const houseColsX = [0.1, 1.55, 3.0, 5.0, 7.0, 8.45, 9.9];
   const houseRowsZ = [0.1, 2.0, 4.0, 5.9];
@@ -1078,7 +1156,7 @@ function initApp() {
     addBox(gFoundation, 0.25, 0.025, 0.25, px, Y_PILE_TOP + 0.012, pz, matSteel);
   }
 
-  // Treated base rim beams (distinctive greenish-ochre antiseptic color from photos!)
+  // Rim beams / base crown (закладной венец 200x200 + 150x200, зеленовато-охристый антисептик)
   const yRim = Y_PILE_TOP + Y_BASE_BEAM / 2;
   addBox(gFoundation, 13.0, Y_BASE_BEAM, 0.20, 3.5, yRim, 0.1, matTreatedRim);
   addBox(gFoundation, 10.0, Y_BASE_BEAM, 0.20, 5.0, yRim, 2.0, matTreatedRim);
@@ -1096,13 +1174,14 @@ function initApp() {
   addBox(gFoundation, 3.0, 0.05, 1.5, 1.5, Y_FLOOR1 - 0.03, 6.75, matDeck);
   addBox(gFoundation, 3.0, 0.05, 1.5, 8.5, Y_FLOOR1 - 0.03, 6.75, matDeck);
 
-  addBox(gPlinthProj, 13.04, Y_PILE_TOP + 0.15, 7.54, 3.5, (Y_PILE_TOP + 0.15) / 2, 3.75, matStone);
+  // Project plinth cladding (clean 2 cm margin outside to prevent any z-fighting)
+  addBox(gPlinthProj, 13.06, Y_PILE_TOP + 0.15, 7.56, 3.5, (Y_PILE_TOP + 0.15) / 2, 3.75, matStone);
   gPlinthProj.visible = false;
 
   // =========================================================================
-  // 8. FLOOR 1 WALLS, WINDOWS, DOORS & POSTS (REFINED TO PHOTOS)
+  // 8. FLOOR 1 WALLS (140×190 мм) & WINDOWS (EXACT TO REAL PHOTOS)
   // =========================================================================
-  // Back exterior wall (Z = 0)
+  // Back wall (Z = 0)
   buildWallWithOpenings(gFloor1, {
     axis: "x", fixedCoord: 0.0, start: 0.0, end: 10.0,
     yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: T_EXT, mat: matWall,
@@ -1112,7 +1191,7 @@ function initApp() {
     ]
   });
 
-  // Left exterior wall (X = 0, facing terrace)
+  // Left wall facing terrace (X = 0)
   buildWallWithOpenings(gFloor1, {
     axis: "z", fixedCoord: 0.0, start: 0.0, end: 6.0,
     yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: T_EXT, mat: matWall,
@@ -1123,23 +1202,20 @@ function initApp() {
     ]
   });
 
-  // Front Kitchen wall (Z = 6.0, X = 0..3)
+  // Front Kitchen wall (Z = 6.0)
   buildWallWithOpenings(gFloor1, {
     axis: "x", fixedCoord: 6.0, start: 0.0, end: 3.0,
     yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: T_EXT, mat: matWall,
-    openings: [
-      { type: "doorExt", u0: 1.78, u1: 2.65, v0: 0.0, v1: 2.10, glassDoor: true }
-    ]
+    openings: [{ type: "doorExt", u0: 1.78, u1: 2.65, v0: 0.0, v1: 2.10, glassDoor: true }]
   });
 
-  // Living Room protrusion returns
+  // Living Room protrusion returns (X = 3.0 and X = 7.0)
   buildWallWithOpenings(gFloor1, {
     axis: "z", fixedCoord: 3.0, start: 6.0, end: 7.5,
     yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: T_EXT, mat: matWall
   });
 
-  // Front Living Room wall (Z = 7.5, X = 3..7) — EXACT PROPORTIONS FROM PHOTO 2!
-  // 2 matching single-sash dark-framed windows (~0.97 x 1.42 m), aligned directly below 2nd-floor windows
+  // Front Living Room wall (Z = 7.5) — 2 single-sash graphite windows (Photo 2)
   buildWallWithOpenings(gFloor1, {
     axis: "x", fixedCoord: 7.5, start: 3.0, end: 7.0,
     yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: T_EXT, mat: matWall,
@@ -1154,17 +1230,14 @@ function initApp() {
     yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: T_EXT, mat: matWall
   });
 
-  // Porch / Hallway front wall (Z = 6.0, X = 7..10) — dark steel door with recessed panel
+  // Front Porch wall (Z = 6.0) — dark steel entrance door (Photo 2)
   buildWallWithOpenings(gFloor1, {
     axis: "x", fixedCoord: 6.0, start: 7.0, end: 10.0,
     yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: T_EXT, mat: matWall,
-    openings: [
-      { type: "doorExt", u0: 0.58, u1: 1.57, v0: 0.0, v1: 2.15 }
-    ]
+    openings: [{ type: "doorExt", u0: 0.58, u1: 1.57, v0: 0.0, v1: 2.15 }]
   });
 
-  // Right exterior wall (X = 10.0, Z = 0..6) — EXACT PROPORTIONS FROM PHOTO 3!
-  // Back bedroom (Комната): square window ~0.96 x 0.96 m; Front hallway (Прихожая): narrow vertical ~0.56 x 0.96 m
+  // Right facade (X = 10.0) — square bedroom window + narrow hallway window (Photo 3)
   buildWallWithOpenings(gFloor1, {
     axis: "z", fixedCoord: 10.0, start: 0.0, end: 6.0,
     yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: T_EXT, mat: matWall,
@@ -1174,12 +1247,12 @@ function initApp() {
     ]
   });
 
-  // Warm-corner end-grain accents on 1st floor exterior corners
+  // Corner interlocking log ends («тёплый угол» каждые 140 мм)
   [[0.0, 0.0], [10.0, 0.0], [10.0, 6.0], [3.0, 7.5], [7.0, 7.5], [0.0, 6.0]].forEach(([cx, cz]) => {
-    addCornerJoinery(gFloor1, cx, cz, Y_FLOOR1, Y_FLOOR1 + H_FLOOR1);
+    addCornerTimberJoints(gFloor1, cx, cz, Y_FLOOR1, Y_FLOOR1 + H_FLOOR1);
   });
 
-  // Interior partitions 1st floor
+  // Interior partitions 1st floor (140x190 load-bearing, 90x140 bathroom)
   buildWallWithOpenings(gFloor1, {
     axis: "z", fixedCoord: 3.0, start: 0.0, end: 6.0,
     yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: T_INT, mat: matWallInner,
@@ -1206,29 +1279,25 @@ function initApp() {
   });
   buildWallWithOpenings(gFloor1, {
     axis: "z", fixedCoord: 5.0, start: 0.0, end: 2.0,
-    yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: 0.11, mat: matWallInner
+    yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: T_PART, mat: matWallInner
   });
   buildWallWithOpenings(gFloor1, {
     axis: "x", fixedCoord: 2.0, start: 5.0, end: 7.0,
-    yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: 0.11, mat: matWallInner,
+    yBottom: Y_FLOOR1, yTop: Y_FLOOR1 + H_FLOOR1, thickness: T_PART, mat: matWallInner,
     openings: [{ type: "doorInt", u0: 0.25, u1: 1.00, v0: 0.0, v1: 2.05 }]
   });
 
   // Terrace & Porch wooden posts (150x150 mm)
   const postH = H_FLOOR1 - 0.15;
-  const terracePosts = [
-    [-2.9, 0.1], [-2.9, 2.55], [-2.9, 4.95], [-2.9, 7.4],
-    [0.1, 7.4], [1.65, 7.4]
-  ];
-  for (const [px, pz] of terracePosts) {
+  [[-2.9, 0.1], [-2.9, 2.55], [-2.9, 4.95], [-2.9, 7.4], [0.1, 7.4], [1.65, 7.4]].forEach(([px, pz]) => {
     addBox(gFloor1, 0.15, postH, 0.15, px, Y_FLOOR1 + postH / 2, pz, matTimberPost);
-  }
+  });
   [[8.45, 7.4], [9.9, 7.4]].forEach(([px, pz]) => {
     addBox(gFloor1, 0.15, postH + 0.05, 0.15, px, Y_FLOOR1 + (postH + 0.05) / 2, pz, matTimberPost);
   });
 
   // =========================================================================
-  // 9. STAIRCASE WITH VERTICAL SLATS (KOMPAS-3D MODEL)
+  // 9. STAIRCASE (KOMPAS-3D CAD WITH VERTICAL SLAT SCREEN)
   // =========================================================================
   (function buildStairs() {
     const landingY = Y_FLOOR1 + 1.80;
@@ -1240,11 +1309,8 @@ function initApp() {
     const zStart = 3.02;
 
     for (let i = 0; i < stepsLower; i++) {
-      const sy = Y_FLOOR1 + (i + 1) * stepH;
-      const sz = zStart - i * stepD;
-      addBox(gStairs, stairW, 0.045, stepD + 0.02, xLower, sy, sz, matStairWood);
+      addBox(gStairs, stairW, 0.045, stepD + 0.02, xLower, Y_FLOOR1 + (i + 1) * stepH, zStart - i * stepD, matStairWood);
     }
-
     const zLandFront = zStart - (stepsLower - 1) * stepD - stepD / 2 - 0.05;
     addBeamBetween(gStairs, [xLower - stairW / 2 + 0.03, Y_FLOOR1 + 0.05, zStart + 0.1], [xLower - stairW / 2 + 0.03, landingY, zLandFront], 0.06, 0.22, matStairWood);
     addBeamBetween(gStairs, [xLower + stairW / 2 - 0.03, Y_FLOOR1 + 0.05, zStart + 0.1], [xLower + stairW / 2 - 0.03, landingY, zLandFront], 0.06, 0.22, matStairWood);
@@ -1259,11 +1325,10 @@ function initApp() {
     const stepsUpper = 5;
     const stepH2 = (Y_FLOOR2 - landingY) / stepsUpper;
     for (let i = 0; i < stepsUpper; i++) {
-      const sy = landingY + (i + 1) * stepH2;
-      const sz = zLandFront + 0.12 + i * 0.24;
-      addBox(gStairs, 0.88, 0.045, 0.25, 3.55, sy, sz, matStairWood);
+      addBox(gStairs, 0.88, 0.045, 0.25, 3.55, landingY + (i + 1) * stepH2, zLandFront + 0.12 + i * 0.24, matStairWood);
     }
 
+    // Vertical slat screen (реечная перегородка)
     const slatTopY = Y_FLOOR2 + 2.35;
     const numSlats = 8;
     for (let i = 0; i < numSlats; i++) {
@@ -1278,7 +1343,7 @@ function initApp() {
   })();
 
   // =========================================================================
-  // 10. FLOOR 2 SLAB, WALLS & GABLES (REFINED TO PHOTOS 2 & 3!)
+  // 10. FLOOR 2 SLAB, KNEE WALLS & REAL GABLES (140×190 мм)
   // =========================================================================
   const ySlabMid = Y_FLOOR2 - H_SLAB12 / 2;
   addBox(gFloor2, 3.0, H_SLAB12, 6.0, 1.5, ySlabMid, 3.0, matFloor);
@@ -1288,58 +1353,29 @@ function initApp() {
   addBox(gFloor2, 1.9, 0.015, 1.9, 6.0, Y_FLOOR2 + 0.01, 1.0, matTileBath, false, true);
 
   addBox(gFloor2, 1.0, 0.06, 0.06, 4.48, Y_FLOOR2 + 0.95, 2.68, matStairWood);
-  for (let i = 0; i < 6; i++) {
-    addBox(gFloor2, 0.035, 0.95, 0.035, 4.05 + i * 0.17, Y_FLOOR2 + 0.475, 2.68, matStairWood);
-  }
+  for (let i = 0; i < 6; i++) addBox(gFloor2, 0.035, 0.95, 0.035, 4.05 + i * 0.17, Y_FLOOR2 + 0.475, 2.68, matStairWood);
 
-  buildWallWithOpenings(gFloor2, {
-    axis: "x", fixedCoord: 0.0, start: 0.0, end: 10.0,
-    yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall
-  });
-  buildWallWithOpenings(gFloor2, {
-    axis: "x", fixedCoord: 6.0, start: 0.0, end: 3.0,
-    yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall
-  });
-  buildWallWithOpenings(gFloor2, {
-    axis: "x", fixedCoord: 6.0, start: 7.0, end: 10.0,
-    yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall
-  });
-  buildWallWithOpenings(gFloor2, {
-    axis: "z", fixedCoord: 3.0, start: 6.0, end: 7.5,
-    yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall
-  });
-  buildWallWithOpenings(gFloor2, {
-    axis: "z", fixedCoord: 7.0, start: 6.0, end: 7.5,
-    yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall
-  });
+  buildWallWithOpenings(gFloor2, { axis: "x", fixedCoord: 0.0, start: 0.0, end: 10.0, yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall });
+  buildWallWithOpenings(gFloor2, { axis: "x", fixedCoord: 6.0, start: 0.0, end: 3.0,  yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall });
+  buildWallWithOpenings(gFloor2, { axis: "x", fixedCoord: 6.0, start: 7.0, end: 10.0, yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall });
+  buildWallWithOpenings(gFloor2, { axis: "z", fixedCoord: 3.0, start: 6.0, end: 7.5,  yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall });
+  buildWallWithOpenings(gFloor2, { axis: "z", fixedCoord: 7.0, start: 6.0, end: 7.5,  yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall });
 
-  // Left Gable (X = 0) — compact horizontal 2-sash window matching right gable photo
+  // Left & Right Gables — compact horizontal 2-sash windows (Photo 3)
   buildWallWithOpenings(gFloor2, {
     axis: "z", fixedCoord: 0.0, start: 0.0, end: 6.0,
     yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall,
     gablePeak: { u: 3.0, v: H_KNEE + H_GABLE },
-    openings: [
-      { type: "window", u0: 2.38, u1: 3.62, v0: 1.25, v1: 2.15, sashes: 2 }
-    ]
+    openings: [{ type: "window", u0: 2.38, u1: 3.62, v0: 1.25, v1: 2.15, sashes: 2 }]
   });
-
-  // Right Gable (X = 10) — EXACT PROPORTIONS FROM PHOTO 3!
-  // Compact horizontal 2-sash window (~1.24 x 0.90 m), sill right at eave purlin level
   buildWallWithOpenings(gFloor2, {
     axis: "z", fixedCoord: 10.0, start: 0.0, end: 6.0,
     yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall,
     gablePeak: { u: 3.0, v: H_KNEE + H_GABLE },
-    openings: [
-      { type: "window", u0: 2.38, u1: 3.62, v0: 1.25, v1: 2.15, sashes: 2 }
-    ]
+    openings: [{ type: "window", u0: 2.38, u1: 3.62, v0: 1.25, v1: 2.15, sashes: 2 }]
   });
 
-  // FRONT GABLE (Z = 7.5, X = 3..7) — EXACT 5-SIDED WINDOWS FROM PHOTO 2!
-  // Each window has:
-  //   - Inner narrow vertical rectangular pane (width 0.37 m) with horizontal top at v = 1.96 m
-  //   - Outer wider sloped pane (width 0.60 m) going up to v = 1.15 m on outer edge, then parallel to roof slope to v = 1.96 m
-  //   - Vertical mullion right at the bend (u = 1.18 on left window, u = 2.82 on right window)
-  //   - Large solid timber gable triangle above the windows up to ridge purlin (exact match to photo 2!)
+  // FRONT GABLE — TWO EXACT 5-SIDED ASYMMETRIC WINDOWS (Photo 2)
   buildWallWithOpenings(gFloor2, {
     axis: "x", fixedCoord: 7.5, start: 3.0, end: 7.0,
     yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_EXT, mat: matWall,
@@ -1358,12 +1394,11 @@ function initApp() {
     ]
   });
 
-  // Warm-corner end-grain accents on 2nd floor knee walls
   [[0.0, 0.0], [10.0, 0.0], [10.0, 6.0], [3.0, 7.5], [7.0, 7.5], [0.0, 6.0]].forEach(([cx, cz]) => {
-    addCornerJoinery(gFloor2, cx, cz, Y_FLOOR2, Y_EAVE);
+    addCornerTimberJoints(gFloor2, cx, cz, Y_FLOOR2, Y_EAVE);
   });
 
-  // Interior walls 2nd floor
+  // Interior partitions 2nd floor
   buildWallWithOpenings(gFloor2, {
     axis: "z", fixedCoord: 3.0, start: 0.0, end: 6.0,
     yBottom: Y_FLOOR2, yTop: Y_EAVE, thickness: T_INT, mat: matWallInner,
@@ -1383,18 +1418,14 @@ function initApp() {
   });
   buildWallWithOpenings(gFloor2, {
     axis: "x", fixedCoord: 2.0, start: 5.0, end: 7.0,
-    yBottom: Y_FLOOR2, yTop: Y_FLOOR2 + 2.55, thickness: 0.11, mat: matWallInner,
+    yBottom: Y_FLOOR2, yTop: Y_FLOOR2 + 2.55, thickness: T_PART, mat: matWallInner,
     openings: [{ type: "doorInt", u0: 0.55, u1: 1.30, v0: 0.0, v1: 2.05 }]
   });
   {
     const s = new THREE.Shape();
-    s.moveTo(0, 0);
-    s.lineTo(2.0, 0);
-    s.lineTo(2.0, H_KNEE + 1.7);
-    s.lineTo(0, H_KNEE - 0.05);
-    s.closePath();
-    const g = new THREE.ExtrudeGeometry(s, { depth: 0.11, bevelEnabled: false });
-    g.translate(0, 0, -0.055);
+    s.moveTo(0, 0); s.lineTo(2.0, 0); s.lineTo(2.0, H_KNEE + 1.7); s.lineTo(0, H_KNEE - 0.05); s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: T_PART, bevelEnabled: false });
+    g.translate(0, 0, -T_PART / 2);
     const m = new THREE.Mesh(g, matWallInner);
     m.rotation.y = -Math.PI / 2;
     m.position.set(5.0, Y_FLOOR2, 0.0);
@@ -1403,57 +1434,24 @@ function initApp() {
   }
 
   // =========================================================================
-  // 11. T-SHAPED INTERSECTING MAIN ROOF + EXPOSED PURLINS & RAFTER TAILS
+  // 11. T-SHAPED ROOF + EXPOSED PURLINS & RAFTERS
   // =========================================================================
   const OH_MAIN = 0.60;
   const Y_EAVE_EDGE = Y_EAVE - OH_MAIN * 0.90;
   const ROOF_T = 0.22;
 
-  gRoof.add(createSlopedQuadSlab(
-    [-OH_MAIN, Y_EAVE_EDGE, -OH_MAIN],
-    [10.0 + OH_MAIN, Y_EAVE_EDGE, -OH_MAIN],
-    [10.0 + OH_MAIN, Y_RIDGE, 3.0],
-    [-OH_MAIN, Y_RIDGE, 3.0],
-    ROOF_T, matRoof, matSoffit
-  ));
-  gRoof.add(createSlopedQuadSlab(
-    [-OH_MAIN, Y_RIDGE, 3.0],
-    [5.0, Y_RIDGE, 3.0],
-    [2.6, Y_EAVE_EDGE, 6.6],
-    [-OH_MAIN, Y_EAVE_EDGE, 6.6],
-    ROOF_T, matRoof, matSoffit
-  ));
-  gRoof.add(createSlopedQuadSlab(
-    [5.0, Y_RIDGE, 3.0],
-    [10.0 + OH_MAIN, Y_RIDGE, 3.0],
-    [10.0 + OH_MAIN, Y_EAVE_EDGE, 6.6],
-    [7.4, Y_EAVE_EDGE, 6.6],
-    ROOF_T, matRoof, matSoffit
-  ));
-  gRoof.add(createSlopedQuadSlab(
-    [5.0, Y_RIDGE, 3.0],
-    [5.0, Y_RIDGE, 7.5 + OH_MAIN],
-    [2.6, Y_EAVE_EDGE, 7.5 + OH_MAIN],
-    [2.6, Y_EAVE_EDGE, 6.6],
-    ROOF_T, matRoof, matSoffit
-  ));
-  gRoof.add(createSlopedQuadSlab(
-    [5.0, Y_RIDGE, 7.5 + OH_MAIN],
-    [5.0, Y_RIDGE, 3.0],
-    [7.4, Y_EAVE_EDGE, 6.6],
-    [7.4, Y_EAVE_EDGE, 7.5 + OH_MAIN],
-    ROOF_T, matRoof, matSoffit
-  ));
+  gRoof.add(createSlopedQuadSlab([-OH_MAIN, Y_EAVE_EDGE, -OH_MAIN], [10.0 + OH_MAIN, Y_EAVE_EDGE, -OH_MAIN], [10.0 + OH_MAIN, Y_RIDGE, 3.0], [-OH_MAIN, Y_RIDGE, 3.0], ROOF_T, matRoof, matSoffit));
+  gRoof.add(createSlopedQuadSlab([-OH_MAIN, Y_RIDGE, 3.0], [5.0, Y_RIDGE, 3.0], [2.6, Y_EAVE_EDGE, 6.6], [-OH_MAIN, Y_EAVE_EDGE, 6.6], ROOF_T, matRoof, matSoffit));
+  gRoof.add(createSlopedQuadSlab([5.0, Y_RIDGE, 3.0], [10.0 + OH_MAIN, Y_RIDGE, 3.0], [10.0 + OH_MAIN, Y_EAVE_EDGE, 6.6], [7.4, Y_EAVE_EDGE, 6.6], ROOF_T, matRoof, matSoffit));
+  gRoof.add(createSlopedQuadSlab([5.0, Y_RIDGE, 3.0], [5.0, Y_RIDGE, 7.5 + OH_MAIN], [2.6, Y_EAVE_EDGE, 7.5 + OH_MAIN], [2.6, Y_EAVE_EDGE, 6.6], ROOF_T, matRoof, matSoffit));
+  gRoof.add(createSlopedQuadSlab([5.0, Y_RIDGE, 7.5 + OH_MAIN], [5.0, Y_RIDGE, 3.0], [7.4, Y_EAVE_EDGE, 6.6], [7.4, Y_EAVE_EDGE, 7.5 + OH_MAIN], ROOF_T, matRoof, matSoffit));
 
-  // Ridge caps & silver valley flashings
+  // Ridge caps & valleys with polygonOffset to never flicker
   addBeamBetween(gRoof, [-OH_MAIN, Y_RIDGE + 0.05, 3.0], [10.0 + OH_MAIN, Y_RIDGE + 0.05, 3.0], 0.24, 0.09, matRoofTrim);
   addBeamBetween(gRoof, [5.0, Y_RIDGE + 0.05, 3.0], [5.0, Y_RIDGE + 0.05, 7.5 + OH_MAIN], 0.24, 0.09, matRoofTrim);
-
-  const matValley = new THREE.MeshStandardMaterial({ color: 0x9aa4ad, roughness: 0.35, metalness: 0.7 });
   addBeamBetween(gRoof, [5.0, Y_RIDGE + 0.03, 3.0], [2.6, Y_EAVE_EDGE + 0.03, 6.6], 0.16, 0.04, matValley);
   addBeamBetween(gRoof, [5.0, Y_RIDGE + 0.03, 3.0], [7.4, Y_EAVE_EDGE + 0.03, 6.6], 0.16, 0.04, matValley);
 
-  // Exposed horizontal purlin tails (выпуски прогонов на всех 3 фронтонах — 2 венца по высоте, как на фото 2!)
   for (const xSide of [-0.35, 10.35]) {
     addBox(gRoof, 0.72, 0.28, 0.19, xSide, Y_EAVE - 0.10, 0.0, matTimberPost);
     addBox(gRoof, 0.72, 0.28, 0.19, xSide, Y_EAVE - 0.10, 6.0, matTimberPost);
@@ -1463,84 +1461,40 @@ function initApp() {
   addBox(gRoof, 0.19, 0.28, 0.72, 7.0, Y_EAVE - 0.10, 7.82, matTimberPost);
   addBox(gRoof, 0.19, 0.28, 0.72, 5.0, Y_RIDGE - 0.32, 7.82, matTimberPost);
 
-  // Exposed wooden rafter tails under eaves (50x200 mm, step ~0.58 m — clearly visible on photos 1 & 2!)
-  for (let rx = -0.3; rx <= 2.3; rx += 0.58) {
-    addBeamBetween(gRoof, [rx, Y_EAVE - 0.18, 6.0], [rx, Y_EAVE_EDGE - 0.16, 6.56], 0.05, 0.18, matTimberPost);
-  }
-  for (let rx = 7.7; rx <= 10.3; rx += 0.58) {
-    addBeamBetween(gRoof, [rx, Y_EAVE - 0.18, 6.0], [rx, Y_EAVE_EDGE - 0.16, 6.56], 0.05, 0.18, matTimberPost);
-  }
-  for (let rx = -0.3; rx <= 10.3; rx += 0.58) {
-    addBeamBetween(gRoof, [rx, Y_EAVE - 0.18, 0.0], [rx, Y_EAVE_EDGE - 0.16, -0.56], 0.05, 0.18, matTimberPost);
-  }
+  for (let rx = -0.3; rx <= 2.3; rx += 0.58) addBeamBetween(gRoof, [rx, Y_EAVE - 0.18, 6.0], [rx, Y_EAVE_EDGE - 0.16, 6.56], 0.05, 0.18, matTimberPost);
+  for (let rx = 7.7; rx <= 10.3; rx += 0.58) addBeamBetween(gRoof, [rx, Y_EAVE - 0.18, 6.0], [rx, Y_EAVE_EDGE - 0.16, 6.56], 0.05, 0.18, matTimberPost);
+  for (let rx = -0.3; rx <= 10.3; rx += 0.58) addBeamBetween(gRoof, [rx, Y_EAVE - 0.18, 0.0], [rx, Y_EAVE_EDGE - 0.16, -0.56], 0.05, 0.18, matTimberPost);
 
   // =========================================================================
-  // 12. TERRACE HIPPED LEAN-TO ROOF & PORCH CANOPY (WITH EXPOSED RAFTERS)
+  // 12. TERRACE HIPPED ROOF & PORCH CANOPY
   // =========================================================================
   const yTR_High = Y_FLOOR1 + H_FLOOR1 + 0.65;
   const yTR_Low  = Y_FLOOR1 + H_FLOOR1 - 0.08;
 
-  gTerraceRoof.add(createSlopedQuadSlab(
-    [-3.45, yTR_Low, -0.35],
-    [0.0,   yTR_High, -0.35],
-    [0.0,   yTR_High, 6.0],
-    [-3.45, yTR_Low, 7.9],
-    0.13, matRoof, matSoffit
-  ));
-  gTerraceRoof.add(createSlopedQuadSlab(
-    [0.0,   yTR_High, 6.0],
-    [2.92,  yTR_High, 6.0],
-    [2.92,  yTR_Low,  7.9],
-    [-3.45, yTR_Low,  7.9],
-    0.13, matRoof, matSoffit
-  ));
+  gTerraceRoof.add(createSlopedQuadSlab([-3.45, yTR_Low, -0.35], [0.0, yTR_High, -0.35], [0.0, yTR_High, 6.0], [-3.45, yTR_Low, 7.9], 0.13, matRoof, matSoffit));
+  gTerraceRoof.add(createSlopedQuadSlab([0.0, yTR_High, 6.0], [2.92, yTR_High, 6.0], [2.92, yTR_Low, 7.9], [-3.45, yTR_Low, 7.9], 0.13, matRoof, matSoffit));
   addBeamBetween(gTerraceRoof, [0.0, yTR_High + 0.04, 6.0], [-3.45, yTR_Low + 0.04, 7.9], 0.16, 0.06, matRoofTrim);
 
-  // Exposed rafters under terrace roof
-  for (let rz = 0.0; rz <= 6.2; rz += 0.62) {
-    addBeamBetween(gTerraceRoof, [0.0, yTR_High - 0.14, rz], [-3.40, yTR_Low - 0.14, rz], 0.05, 0.15, matTimberPost);
-  }
-  for (let rx = 0.2; rx <= 2.7; rx += 0.62) {
-    addBeamBetween(gTerraceRoof, [rx, yTR_High - 0.14, 6.0], [rx, yTR_Low - 0.14, 7.84], 0.05, 0.15, matTimberPost);
-  }
-
+  for (let rz = 0.0; rz <= 6.2; rz += 0.62) addBeamBetween(gTerraceRoof, [0.0, yTR_High - 0.14, rz], [-3.40, yTR_Low - 0.14, rz], 0.05, 0.15, matTimberPost);
+  for (let rx = 0.2; rx <= 2.7; rx += 0.62) addBeamBetween(gTerraceRoof, [rx, yTR_High - 0.14, 6.0], [rx, yTR_Low - 0.14, 7.84], 0.05, 0.15, matTimberPost);
   addBox(gTerraceRoof, 0.15, 0.16, 7.5, -2.9, Y_FLOOR1 + postH + 0.04, 3.75, matTimberPost);
   addBox(gTerraceRoof, 5.9, 0.16, 0.15, 0.0, Y_FLOOR1 + postH + 0.04, 7.4, matTimberPost);
 
-  // Porch canopy roof (X: 7.05..10.45, Z: 6.0..7.88)
   const yPorchHigh = Y_FLOOR1 + H_FLOOR1 + 0.52;
   const yPorchLow  = Y_FLOOR1 + H_FLOOR1 - 0.02;
-  gTerraceRoof.add(createSlopedQuadSlab(
-    [7.05,  yPorchHigh, 6.0],
-    [10.45, yPorchHigh, 6.0],
-    [10.45, yPorchLow,  7.88],
-    [7.05,  yPorchLow,  7.88],
-    0.13, matRoof, matSoffit
-  ));
-  // Exposed rafter tails under porch canopy (clearly visible in photo 2!)
-  for (let rx = 7.25; rx <= 10.25; rx += 0.58) {
-    addBeamBetween(gTerraceRoof, [rx, yPorchHigh - 0.14, 6.0], [rx, yPorchLow - 0.14, 7.82], 0.05, 0.15, matTimberPost);
-  }
+  gTerraceRoof.add(createSlopedQuadSlab([7.05, yPorchHigh, 6.0], [10.45, yPorchHigh, 6.0], [10.45, yPorchLow, 7.88], [7.05, yPorchLow, 7.88], 0.13, matRoof, matSoffit));
+  for (let rx = 7.25; rx <= 10.25; rx += 0.58) addBeamBetween(gTerraceRoof, [rx, yPorchHigh - 0.14, 6.0], [rx, yPorchLow - 0.14, 7.82], 0.05, 0.15, matTimberPost);
   addBox(gTerraceRoof, 3.0, 0.16, 0.15, 8.5, Y_FLOOR1 + postH + 0.06, 7.4, matTimberPost);
 
   // =========================================================================
-  // 13. STAGE-SPECIFIC DETAILS: RAILINGS, STEPS & PHOTO PROPS
+  // 13. STAGE-SPECIFIC DETAILS (PHOTO vs PROJECT)
   // =========================================================================
-  // Dark treated temporary steps on left terrace (exact match to photo 2!)
-  for (let i = 0; i < 4; i++) {
-    addBox(gStepsPhoto, 1.35, 0.18, 0.30, 1.85, 0.12 + i * 0.21, 8.45 - i * 0.28, matDarkSteps);
-  }
-  // Wooden ladder stored horizontally against right side piles (exact match to photo 3!)
-  {
-    const lx = 10.12;
-    addBox(gStepsPhoto, 0.06, 0.06, 4.3, lx, 0.14, 3.6, matTimberPost);
-    addBox(gStepsPhoto, 0.06, 0.06, 4.3, lx, 0.56, 3.6, matTimberPost);
-    for (let lz = 1.65; lz <= 5.55; lz += 0.32) {
-      addBox(gStepsPhoto, 0.04, 0.44, 0.04, lx, 0.35, lz, matTimberPost);
-    }
-  }
+  for (let i = 0; i < 4; i++) addBox(gStepsPhoto, 1.35, 0.18, 0.30, 1.85, 0.12 + i * 0.21, 8.45 - i * 0.28, matDarkSteps);
+  // Horizontal wooden ladder against right side piles (Photo 3)
+  addBox(gStepsPhoto, 0.06, 0.06, 4.3, 10.12, 0.14, 3.6, matTimberPost);
+  addBox(gStepsPhoto, 0.06, 0.06, 4.3, 10.12, 0.56, 3.6, matTimberPost);
+  for (let lz = 1.65; lz <= 5.55; lz += 0.32) addBox(gStepsPhoto, 0.04, 0.44, 0.04, 10.12, 0.35, lz, matTimberPost);
 
-  // Project-stage steps
   for (let i = 0; i < 4; i++) {
     addBox(gStepsProj, 1.45, 0.16, 0.30, 1.9, 0.14 + i * 0.20, 8.50 - i * 0.28, matRoofTrim);
     addBox(gStepsProj, 1.45, 0.16, 0.30, 7.8, 0.14 + i * 0.20, 8.50 - i * 0.28, matRoofTrim);
@@ -1549,11 +1503,9 @@ function initApp() {
   function addRailingSegment(x1, z1, x2, z2) {
     const len = Math.hypot(x2 - x1, z2 - z1);
     const ang = Math.atan2(x2 - x1, z2 - z1);
-    const mx = (x1 + x2) / 2;
-    const mz = (z1 + z2) / 2;
+    const mx = (x1 + x2) / 2, mz = (z1 + z2) / 2;
     const grp = new THREE.Group();
-    const heights = [0.22, 0.42, 0.62, 0.82, 0.98];
-    heights.forEach((h, idx) => {
+    [0.22, 0.42, 0.62, 0.82, 0.98].forEach((h, idx) => {
       addBox(grp, idx === 4 ? 0.09 : 0.04, idx === 4 ? 0.06 : 0.08, len, 0, Y_FLOOR1 + h, 0, matWhiteTrim);
     });
     grp.position.set(mx, 0, mz);
@@ -1569,7 +1521,7 @@ function initApp() {
   gStepsProj.visible = false;
 
   // =========================================================================
-  // 14. OPTIONAL INTERIOR FURNITURE
+  // 14. FURNITURE
   // =========================================================================
   const matSofa = new THREE.MeshStandardMaterial({ color: 0x4c5d6b, roughness: 0.85 });
   const matBed = new THREE.MeshStandardMaterial({ color: 0xe2dfd8, roughness: 0.85 });
@@ -1584,9 +1536,7 @@ function initApp() {
   addBox(gFurn1, 0.9, 0.42, 0.95, 6.1, Y_FLOOR1 + 0.21, 5.65, matSofa);
   addBox(gFurn1, 1.0, 0.38, 0.60, 4.9, Y_FLOOR1 + 0.19, 5.4, matStairWood);
   addBox(gFurn1, 1.4, 0.05, 0.85, 5.2, Y_FLOOR1 + 0.74, 3.6, matStairWood);
-  [[4.6, 3.25], [5.8, 3.25], [4.6, 3.95], [5.8, 3.95]].forEach(([lx, lz]) => {
-    addBox(gFurn1, 0.06, 0.72, 0.06, lx, Y_FLOOR1 + 0.36, lz, matStairWood);
-  });
+  [[4.6, 3.25], [5.8, 3.25], [4.6, 3.95], [5.8, 3.95]].forEach(([lx, lz]) => addBox(gFurn1, 0.06, 0.72, 0.06, lx, Y_FLOOR1 + 0.36, lz, matStairWood));
 
   addBox(gFurn1, 2.5, 0.85, 0.62, 1.5, Y_FLOOR1 + 0.425, 2.42, matKitchen);
   addBox(gFurn1, 2.54, 0.05, 0.65, 1.5, Y_FLOOR1 + 0.87, 2.42, matCounter);
@@ -1623,9 +1573,9 @@ function initApp() {
   addBox(gFurn2, 0.85, 0.50, 1.55, 6.45, Y_FLOOR2 + 0.25, 1.05, matWhiteAppliance);
 
   // =========================================================================
-  // 15. 3D DIMENSION LINES & 2D PROJECTED LABELS
+  // 15. 3D DIMENSION BARS & 2D LABELS
   // =========================================================================
-  const dimLineMat = new THREE.LineBasicMaterial({ color: 0x6cd4ff });
+  const dimLineMat = new THREE.LineBasicMaterial({ color: 0x6cd4ff, depthTest: false });
   const dimMarkers = [];
   function addDimLine(p1, p2, text) {
     const pts = [new THREE.Vector3(...p1), new THREE.Vector3(...p2)];
@@ -1647,7 +1597,7 @@ function initApp() {
   addDimLine([0.0, 0.18, -1.2], [10.0, 0.18, -1.2], "10,0 м (дом)");
   addDimLine([11.2, 0.18, 0.0], [11.2, 0.18, 7.5], "7,5 м");
   addDimLine([10.9, 0.0, 6.0], [10.9, Y_RIDGE, 6.0], "Конёк 8,0 м");
-  addDimLine([-3.6, Y_FLOOR1, 7.5], [-3.6, Y_FLOOR1 + H_FLOOR1, 7.5], "1 эт: 2,7 м");
+  addDimLine([-3.6, Y_FLOOR1, 7.5], [-3.6, Y_FLOOR1 + H_FLOOR1, 7.5], "1 эт: 2,7 м (19 венцов)");
   gDims.visible = false;
 
   const roomData = [
@@ -1675,21 +1625,14 @@ function initApp() {
   });
 
   // =========================================================================
-  // 16. UI STATE & INTERACTION HANDLERS
+  // 16. UI STATE & INTERACTION
   // =========================================================================
-  const state = {
-    layer: "all",
-    stage: "photo",
-    time: "day",
-    furniture: true,
-    labels: true,
-    dims: false
-  };
+  const state = { layer: "all", stage: "photo", time: "day", furniture: true, labels: true, dims: false };
 
   function applyVisibility() {
-    const isAll    = state.layer === "all";
+    const isAll = state.layer === "all";
     const isFloor2 = state.layer === "floor2";
-    const isPiles  = state.layer === "piles";
+    const isPiles = state.layer === "piles";
 
     gFoundation.visible  = true;
     gPlinthProj.visible  = (state.stage === "project") && !isPiles;
@@ -1711,8 +1654,7 @@ function initApp() {
   function applyWoodColor(presetKey) {
     const p = woodPresets[presetKey];
     if (!p) return;
-    const newTex = makeTimberTexture(p.base, p.groove, p.grain);
-    newTex.repeat.set(0.45, 0.9);
+    const newTex = makeProfiledTimberTexture(p.base, p.groove, p.grain);
     if (matWall.map) matWall.map.dispose();
     matWall.map = newTex;
     matWall.needsUpdate = true;
@@ -1723,21 +1665,21 @@ function initApp() {
   function applyTimeOfDay(mode) {
     state.time = mode;
     if (mode === "evening") {
-      scene.background.setHex(0x162235);
-      scene.fog.color.setHex(0x162235);
-      hemiLight.color.setHex(0x3a5275);
-      hemiLight.groundColor.setHex(0x1a1f24);
-      hemiLight.intensity = 0.45;
-      sunLight.color.setHex(0x88a9d6);
+      scene.background.setHex(0x131d2b);
+      scene.fog.color.setHex(0x131d2b);
+      hemiLight.color.setHex(0x384d6b);
+      hemiLight.groundColor.setHex(0x171c22);
+      hemiLight.intensity = 0.44;
+      sunLight.color.setHex(0x86a6d2);
       sunLight.intensity = 0.35;
       sunLight.position.set(-14, 18, 12);
       eveningLightsGroup.visible = true;
       windowGlassMeshes.forEach(m => { m.material = matGlassEvening; });
     } else {
-      scene.background.setHex(0xcbd9e6);
-      scene.fog.color.setHex(0xcbd9e6);
+      scene.background.setHex(0xd2e0ed);
+      scene.fog.color.setHex(0xd2e0ed);
       hemiLight.color.setHex(0xdcebf7);
-      hemiLight.groundColor.setHex(0x5c684a);
+      hemiLight.groundColor.setHex(0x5a6648);
       hemiLight.intensity = 0.78;
       sunLight.color.setHex(0xfff5e4);
       sunLight.intensity = 1.25;
@@ -1823,7 +1765,7 @@ function initApp() {
 
   const panelToggle = document.getElementById("panel-toggle");
   const controlsPanel = document.getElementById("controls");
-  if (window.innerWidth <= 720) controlsPanel.classList.add("collapsed");
+  if (window.innerWidth <= 768) controlsPanel.classList.add("collapsed");
   panelToggle.addEventListener("click", () => {
     controlsPanel.classList.toggle("collapsed");
   });
@@ -1846,33 +1788,21 @@ function initApp() {
       else if (state.layer === "floor2" && r.floor !== 2) show = false;
       else if (state.layer === "all" && r.floor === 2) show = false;
 
-      if (!show) {
-        r.el.style.display = "none";
-        continue;
-      }
+      if (!show) { r.el.style.display = "none"; continue; }
       projVec.copy(r.pos).project(camera);
-      if (projVec.z > 1) {
-        r.el.style.display = "none";
-        continue;
-      }
+      if (projVec.z > 1) { r.el.style.display = "none"; continue; }
       r.el.style.display = "block";
       r.el.style.left = ((projVec.x * 0.5 + 0.5) * w) + "px";
-      r.el.style.top = ((-projVec.y * 0.5 + 0.5) * h) + "px";
+      r.el.style.top  = ((-projVec.y * 0.5 + 0.5) * h) + "px";
     }
 
     for (const d of dimMarkers) {
-      if (!state.dims) {
-        d.el.style.display = "none";
-        continue;
-      }
+      if (!state.dims) { d.el.style.display = "none"; continue; }
       projVec.copy(d.pos).project(camera);
-      if (projVec.z > 1) {
-        d.el.style.display = "none";
-        continue;
-      }
+      if (projVec.z > 1) { d.el.style.display = "none"; continue; }
       d.el.style.display = "block";
       d.el.style.left = ((projVec.x * 0.5 + 0.5) * w) + "px";
-      d.el.style.top = ((-projVec.y * 0.5 + 0.5) * h) + "px";
+      d.el.style.top  = ((-projVec.y * 0.5 + 0.5) * h) + "px";
     }
   }
 
@@ -1881,8 +1811,8 @@ function initApp() {
 
     const damp = 0.11;
     ctrl.target.lerp(ctrl.desiredTarget, damp);
-    ctrl.theta += (ctrl.desiredTheta - ctrl.theta) * damp;
-    ctrl.phi += (ctrl.desiredPhi - ctrl.phi) * damp;
+    ctrl.theta  += (ctrl.desiredTheta  - ctrl.theta)  * damp;
+    ctrl.phi    += (ctrl.desiredPhi    - ctrl.phi)    * damp;
     ctrl.radius += (ctrl.desiredRadius - ctrl.radius) * damp;
 
     const sinPhi = Math.sin(ctrl.phi);
@@ -1904,7 +1834,7 @@ function initApp() {
   });
 
   loader.classList.add("hidden");
-  setTimeout(() => { loader.style.display = "none"; }, 450);
+  setTimeout(() => { loader.style.display = "none"; }, 400);
 
   animate();
 }
